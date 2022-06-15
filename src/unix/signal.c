@@ -28,6 +28,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <Semaphore.h>
+
 #ifndef SA_RESTART
 # define SA_RESTART 0
 #endif
@@ -54,7 +56,8 @@ static void uv__signal_unregister_handler(int signum);
 static uv_once_t uv__signal_global_init_guard = UV_ONCE_INIT;
 static struct uv__signal_tree_s uv__signal_tree =
     RB_INITIALIZER(uv__signal_tree);
-static int uv__signal_lock_pipefd[2] = { -1, -1 };
+static sem_t uv__signal_lock_sem;
+static int uv__signal_lock_sem_init = 0;
 
 RB_GENERATE_STATIC(uv__signal_tree_s,
                    uv_signal_s, tree_entry,
@@ -63,7 +66,7 @@ RB_GENERATE_STATIC(uv__signal_tree_s,
 static void uv__signal_global_reinit(void);
 
 static void uv__signal_global_init(void) {
-  if (uv__signal_lock_pipefd[0] == -1)
+    if (!uv__signal_lock_sem_init)
     /* pthread_atfork can register before and after handlers, one
      * for each child. This only registers one for the child. That
      * state is both persistent and cumulative, so if we keep doing
@@ -85,24 +88,21 @@ void uv__signal_cleanup(void) {
    * uv__signal_global_once_init is only called from uv_loop_init
    * and this needs to function in existing loops.
    */
-  if (uv__signal_lock_pipefd[0] != -1) {
-    uv__close(uv__signal_lock_pipefd[0]);
-    uv__signal_lock_pipefd[0] = -1;
-  }
 
-  if (uv__signal_lock_pipefd[1] != -1) {
-    uv__close(uv__signal_lock_pipefd[1]);
-    uv__signal_lock_pipefd[1] = -1;
-  }
+    if (uv__signal_lock_sem_init) {
+      uv__signal_lock_sem_init = 0;
+        sem_destroy(&uv__signal_lock_sem);
+    }
 }
 
 
 static void uv__signal_global_reinit(void) {
   uv__signal_cleanup();
 
-  if (uv__make_pipe(uv__signal_lock_pipefd, 0))
+  int ret = sem_init(&uv__signal_lock_sem, 0, 0);
+  if (ret != 0)
     abort();
-
+  uv__signal_lock_sem_init = 1;
   if (uv__signal_unlock())
     abort();
 }
@@ -115,10 +115,9 @@ void uv__signal_global_once_init(void) {
 
 static int uv__signal_lock(void) {
   int r;
-  char data;
 
   do {
-    r = read(uv__signal_lock_pipefd[0], &data, sizeof data);
+    r = sem_wait(&uv__signal_lock_sem);
   } while (r < 0 && errno == EINTR);
 
   return (r < 0) ? -1 : 0;
@@ -127,10 +126,9 @@ static int uv__signal_lock(void) {
 
 static int uv__signal_unlock(void) {
   int r;
-  char data = 42;
 
   do {
-    r = write(uv__signal_lock_pipefd[1], &data, sizeof data);
+      r = sem_post(&uv__signal_lock_sem);
   } while (r < 0 && errno == EINTR);
 
   return (r < 0) ? -1 : 0;

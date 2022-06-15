@@ -202,7 +202,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
   static int no_epoll_wait_cached;
   int no_epoll_pwait;
   int no_epoll_wait;
-  struct epoll_event events[1024];
+  struct epoll_event  events[1024];
   struct epoll_event* pe;
   struct epoll_event e;
   int real_timeout;
@@ -913,8 +913,8 @@ static int uv__ifaddr_exclude(struct ifaddrs *ent, int exclude_type) {
    * On Linux getifaddrs returns information related to the raw underlying
    * devices. We're not interested in this information yet.
    */
-  if (ent->ifa_addr->sa_family == PF_PACKET)
-    return exclude_type;
+  //if (ent->ifa_addr->sa_family == PF_PACKET)
+  //  return exclude_type;
   return !exclude_type;
 }
 

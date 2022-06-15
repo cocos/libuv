@@ -710,7 +710,7 @@ static void uv__drain(uv_stream_t* stream) {
 
 static ssize_t uv__writev(int fd, struct iovec* vec, size_t n) {
   if (n == 1)
-    return write(fd, vec->iov_base, vec->iov_len);
+    return nnWrite(fd, vec->iov_base, vec->iov_len);
   else
     return writev(fd, vec, n);
 }
@@ -1152,7 +1152,7 @@ static void uv__read(uv_stream_t* stream) {
 
     if (!is_ipc) {
       do {
-        nread = read(uv__stream_fd(stream), buf.base, buf.len);
+        nread = nnRead(uv__stream_fd(stream), buf.base, buf.len);
       }
       while (nread < 0 && errno == EINTR);
     } else {

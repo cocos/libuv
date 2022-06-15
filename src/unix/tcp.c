@@ -27,6 +27,8 @@
 #include <assert.h>
 #include <errno.h>
 
+#include "network/SocketApiNxImpl.h"
+
 
 static int new_socket(uv_tcp_t* handle, int domain, unsigned long flags) {
   struct sockaddr_storage saddr;
@@ -49,12 +51,12 @@ static int new_socket(uv_tcp_t* handle, int domain, unsigned long flags) {
     /* Bind this new socket to an arbitrary port */
     slen = sizeof(saddr);
     memset(&saddr, 0, sizeof(saddr));
-    if (getsockname(uv__stream_fd(handle), (struct sockaddr*) &saddr, &slen)) {
+    if (nnGetsockname(uv__stream_fd(handle), (struct sockaddr*)&saddr, &slen)) {
       uv__close(sockfd);
       return UV__ERR(errno);
     }
 
-    if (bind(uv__stream_fd(handle), (struct sockaddr*) &saddr, slen)) {
+    if (nnBind(uv__stream_fd(handle), (struct sockaddr*) &saddr, slen)) {
       uv__close(sockfd);
       return UV__ERR(errno);
     }
@@ -86,7 +88,7 @@ static int maybe_new_socket(uv_tcp_t* handle, int domain, unsigned long flags) {
       /* Query to see if tcp socket is bound. */
       slen = sizeof(saddr);
       memset(&saddr, 0, sizeof(saddr));
-      if (getsockname(uv__stream_fd(handle), (struct sockaddr*) &saddr, &slen))
+      if (nnGetsockname(uv__stream_fd(handle), (struct sockaddr*)&saddr, &slen))
         return UV__ERR(errno);
 
       if ((saddr.ss_family == AF_INET6 &&
@@ -99,7 +101,7 @@ static int maybe_new_socket(uv_tcp_t* handle, int domain, unsigned long flags) {
       }
 
       /* Bind to arbitrary port */
-      if (bind(uv__stream_fd(handle), (struct sockaddr*) &saddr, slen))
+      if (nnBind(uv__stream_fd(handle), (struct sockaddr*) &saddr, slen))
         return UV__ERR(errno);
     }
 
@@ -161,14 +163,14 @@ int uv__tcp_bind(uv_tcp_t* tcp,
     return err;
 
   on = 1;
-  if (setsockopt(tcp->io_watcher.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
+  if (nnSetsockopt(tcp->io_watcher.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)))
     return UV__ERR(errno);
 
 #ifndef __OpenBSD__
 #ifdef IPV6_V6ONLY
   if (addr->sa_family == AF_INET6) {
     on = (flags & UV_TCP_IPV6ONLY) != 0;
-    if (setsockopt(tcp->io_watcher.fd,
+      if (nnSetsockopt(tcp->io_watcher.fd,
                    IPPROTO_IPV6,
                    IPV6_V6ONLY,
                    &on,
@@ -184,7 +186,7 @@ int uv__tcp_bind(uv_tcp_t* tcp,
 #endif
 
   errno = 0;
-  if (bind(tcp->io_watcher.fd, addr, addrlen) && errno != EADDRINUSE) {
+  if (nnBind(tcp->io_watcher.fd, addr, addrlen) && errno != EADDRINUSE) {
     if (errno == EAFNOSUPPORT)
       /* OSX, other BSDs and SunoS fail with EAFNOSUPPORT when binding a
        * socket created with AF_INET to an AF_INET6 address or vice versa. */
@@ -224,7 +226,7 @@ int uv__tcp_connect(uv_connect_t* req,
 
   do {
     errno = 0;
-    r = connect(uv__stream_fd(handle), addr, addrlen);
+    r = nnConnect(uv__stream_fd(handle), addr, addrlen);
   } while (r == -1 && errno == EINTR);
 
   /* We not only check the return value, but also check the errno != 0.
@@ -288,7 +290,7 @@ int uv_tcp_getsockname(const uv_tcp_t* handle,
     return handle->delayed_error;
 
   return uv__getsockpeername((const uv_handle_t*) handle,
-                             getsockname,
+                             nnGetsockname,
                              name,
                              namelen);
 }
@@ -302,7 +304,7 @@ int uv_tcp_getpeername(const uv_tcp_t* handle,
     return handle->delayed_error;
 
   return uv__getsockpeername((const uv_handle_t*) handle,
-                             getpeername,
+                             nnGetsockname,
                              name,
                              namelen);
 }
@@ -317,7 +319,7 @@ int uv_tcp_close_reset(uv_tcp_t* handle, uv_close_cb close_cb) {
     return UV_EINVAL;
 
   fd = uv__stream_fd(handle);
-  if (0 != setsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)))
+  if (0 != nnSetsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)))
     return UV__ERR(errno);
 
   uv_close((uv_handle_t*) handle, close_cb);
@@ -356,7 +358,7 @@ int uv_tcp_listen(uv_tcp_t* tcp, int backlog, uv_connection_cb cb) {
   if (err)
     return err;
 
-  if (listen(tcp->io_watcher.fd, backlog))
+  if (nnListen(tcp->io_watcher.fd, backlog))
     return UV__ERR(errno);
 
   tcp->connection_cb = cb;
@@ -371,25 +373,25 @@ int uv_tcp_listen(uv_tcp_t* tcp, int backlog, uv_connection_cb cb) {
 
 
 int uv__tcp_nodelay(int fd, int on) {
-  if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)))
+  if (nnSetsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)))
     return UV__ERR(errno);
   return 0;
 }
 
 
 int uv__tcp_keepalive(int fd, int on, unsigned int delay) {
-  if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)))
+    if (nnSetsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)))
     return UV__ERR(errno);
 
 #ifdef TCP_KEEPIDLE
   if (on) {
     int intvl = 1;  /*  1 second; same as default on Win32 */
     int cnt = 10;  /* 10 retries; same as hardcoded on Win32 */
-    if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &delay, sizeof(delay)))
+    if (nnSetsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &delay, sizeof(delay)))
       return UV__ERR(errno);
-    if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl)))
+    if (nnSetsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl)))
       return UV__ERR(errno);
-    if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)))
+    if (nnSetsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)))
       return UV__ERR(errno);
   }
 #endif
@@ -399,7 +401,7 @@ int uv__tcp_keepalive(int fd, int on, unsigned int delay) {
    */
   /* FIXME(bnoordhuis) That's possibly because sizeof(delay) should be 1. */
 #if defined(TCP_KEEPALIVE) && !defined(__sun)
-  if (on && setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &delay, sizeof(delay)))
+  if (on && nnSetsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &delay, sizeof(delay)))
     return UV__ERR(errno);
 #endif
 
