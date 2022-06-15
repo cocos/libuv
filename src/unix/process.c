@@ -140,7 +140,7 @@ static int uv__make_socketpair(int fds[2]) {
 
 
 int uv__make_pipe(int fds[2], int flags) {
-#if defined(__FreeBSD__) || defined(__linux__)
+#if defined(__FreeBSD__) || defined(__linux__) || defined(__nx__) // TODO : not use  pipe
   if (pipe2(fds, flags | O_CLOEXEC))
     return UV__ERR(errno);
 

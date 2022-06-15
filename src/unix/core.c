@@ -26,16 +26,20 @@
 #include <stdlib.h>
 #include <string.h> /* strerror */
 #include <errno.h>
-#include <assert.h>
 #include <unistd.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>  /* O_CLOEXEC */
 #include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#if defined(__nx__)
+#include "network/SocketApiNxImpl.h"
+#else
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <sys/un.h>
+#endif
 #include <limits.h> /* INT_MAX, PATH_MAX, IOV_MAX */
 #include <sys/uio.h> /* writev */
 #include <sys/resource.h> /* getrusage */
@@ -153,7 +157,8 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     break;
 
   case UV_FS_EVENT:
-    uv__fs_event_close((uv_fs_event_t*)handle);
+      assert(0); //not support
+    //uv__fs_event_close((uv_fs_event_t*)handle);
     break;
 
   case UV_POLL:
@@ -195,9 +200,9 @@ int uv__socket_sockopt(uv_handle_t* handle, int optname, int* value) {
   len = sizeof(*value);
 
   if (*value == 0)
-    r = getsockopt(fd, SOL_SOCKET, optname, value, &len);
+    r = nnGetsockopt(fd, SOL_SOCKET, optname, value, &len);
   else
-    r = setsockopt(fd, SOL_SOCKET, optname, (const void*) value, len);
+    r = nnSetsockopt(fd, SOL_SOCKET, optname, (const void*) value, len);
 
   if (r < 0)
     return UV__ERR(errno);
@@ -438,7 +443,7 @@ int uv__socket(int domain, int type, int protocol) {
   int err;
 
 #if defined(SOCK_NONBLOCK) && defined(SOCK_CLOEXEC)
-  sockfd = socket(domain, type | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
+  sockfd = nnSocket(domain, type | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
   if (sockfd != -1)
     return sockfd;
 
@@ -446,7 +451,7 @@ int uv__socket(int domain, int type, int protocol) {
     return UV__ERR(errno);
 #endif
 
-  sockfd = socket(domain, type, protocol);
+  sockfd = nnSocket(domain, type, protocol);
   if (sockfd == -1)
     return UV__ERR(errno);
 
@@ -462,7 +467,7 @@ int uv__socket(int domain, int type, int protocol) {
 #if defined(SO_NOSIGPIPE)
   {
     int on = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+    nnSetsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
   }
 #endif
 
@@ -497,7 +502,7 @@ int uv__accept(int sockfd) {
 #ifdef uv__accept4
     peerfd = uv__accept4(sockfd, NULL, NULL, SOCK_NONBLOCK|SOCK_CLOEXEC);
 #else
-    peerfd = accept(sockfd, NULL, NULL);
+    peerfd = nnAccept(sockfd, NULL, NULL);
 #endif
   while (peerfd == -1 && errno == EINTR);
 
@@ -539,6 +544,8 @@ int uv__close_nocancel(int fd) {
   return close$NOCANCEL$UNIX2003(fd);
 #endif
 #pragma GCC diagnostic pop
+#elif defined(__NX__)
+    return nnClose(fd);
 #elif defined(__linux__)
   return syscall(SYS_close, fd);
 #else
@@ -610,7 +617,7 @@ int uv__nonblock_fcntl(int fd, int set) {
   int r;
 
   do
-    r = fcntl(fd, F_GETFL);
+    r = nnFcntl(fd, F_GETFL);
   while (r == -1 && errno == EINTR);
 
   if (r == -1)
@@ -626,7 +633,7 @@ int uv__nonblock_fcntl(int fd, int set) {
     flags = r & ~O_NONBLOCK;
 
   do
-    r = fcntl(fd, F_SETFL, flags);
+    r = nnFcntl(fd, F_SETFL, flags);
   while (r == -1 && errno == EINTR);
 
   if (r)
@@ -641,7 +648,7 @@ int uv__cloexec_fcntl(int fd, int set) {
   int r;
 
   do
-    r = fcntl(fd, F_GETFD);
+    r = nnFcntl(fd, F_GETFD);
   while (r == -1 && errno == EINTR);
 
   if (r == -1)
@@ -657,7 +664,7 @@ int uv__cloexec_fcntl(int fd, int set) {
     flags = r & ~FD_CLOEXEC;
 
   do
-    r = fcntl(fd, F_SETFD, flags);
+    r = nnFcntl(fd, F_SETFD, flags);
   while (r == -1 && errno == EINTR);
 
   if (r)

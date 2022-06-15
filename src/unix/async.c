@@ -38,6 +38,10 @@
 #include <sys/eventfd.h>
 #endif
 
+#ifdef __nx__
+#include "network/SocketApiNxImpl.h"
+#endif
+
 static void uv__async_send(uv_loop_t* loop);
 static int uv__async_start(uv_loop_t* loop);
 
@@ -120,21 +124,19 @@ void uv__async_close(uv_async_t* handle) {
 
 
 static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
-  char buf[1024];
-  ssize_t r;
   QUEUE queue;
   QUEUE* q;
   uv_async_t* h;
+  uint64_t           counts = 0;
 
   assert(w == &loop->async_io_watcher);
 
   for (;;) {
-    r = read(w->fd, buf, sizeof(buf));
-
-    if (r == sizeof(buf))
+    int res              = nnRead(w->fd, &counts, sizeof(counts));
+    if (res == sizeof(counts))
       continue;
 
-    if (r != -1)
+    if (res != -1)
       break;
 
     if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -174,6 +176,7 @@ static void uv__async_send(uv_loop_t* loop) {
   buf = "";
   len = 1;
   fd = loop->async_wfd;
+  uint64_t counts = 1;
 
 #if defined(__linux__)
   if (fd == -1) {
@@ -184,10 +187,20 @@ static void uv__async_send(uv_loop_t* loop) {
   }
 #endif
 
+#if defined(__nx__)
+  if (fd == -1) {
+      static const uint64_t val = 1;
+      fd                        = loop->async_io_watcher.fd; /* eventfd */
+  }
+#endif
+
   do
-    r = write(fd, buf, len);
+      r = nnWrite(fd, &counts, sizeof(counts));
   while (r == -1 && errno == EINTR);
 
+#if defined(__nx__)
+  len = sizeof(counts);
+#endif
   if (r == len)
     return;
 
@@ -212,6 +225,9 @@ static int uv__async_start(uv_loop_t* loop) {
     return UV__ERR(errno);
 
   pipefd[0] = err;
+  pipefd[1] = -1;
+#elif __nx__
+  pipefd[0] = eventFd(0, 0);
   pipefd[1] = -1;
 #else
   err = uv__make_pipe(pipefd, UV__F_NONBLOCK);

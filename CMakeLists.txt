@@ -17,11 +17,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD 90)
 
+set(BUILD_TESTING OFF)
 cmake_dependent_option(LIBUV_BUILD_TESTS
-  "Build the unit tests when BUILD_TESTING is enabled and we are the root project" ON
+  "Build the unit tests when BUILD_TESTING is enabled and we are the root project" OFF
   "BUILD_TESTING;CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF)
 cmake_dependent_option(LIBUV_BUILD_BENCH
-  "Build the benchmarks when building unit tests and we are the root project" ON
+  "Build the benchmarks when building unit tests and we are the root project" OFF
   "LIBUV_BUILD_TESTS" OFF)
 
 # Qemu Build
@@ -96,16 +97,16 @@ list(APPEND uv_cflags ${lint-no-unsafe-msvc})
 list(APPEND uv_cflags ${lint-utf8-msvc} )
 
 set(uv_sources
-    src/fs-poll.c
-    src/idna.c
-    src/inet.c
-    src/random.c
-    src/strscpy.c
-    src/threadpool.c
-    src/timer.c
-    src/uv-common.c
-    src/uv-data-getter-setters.c
-    src/version.c)
+${CMAKE_CURRENT_LIST_DIR}/src/fs-poll.c
+${CMAKE_CURRENT_LIST_DIR}/src/idna.c
+${CMAKE_CURRENT_LIST_DIR}/src/inet.c
+${CMAKE_CURRENT_LIST_DIR}/src/random.c
+${CMAKE_CURRENT_LIST_DIR}/src/strscpy.c
+${CMAKE_CURRENT_LIST_DIR}/src/threadpool.c
+${CMAKE_CURRENT_LIST_DIR}/src/timer.c
+${CMAKE_CURRENT_LIST_DIR}/src/uv-common.c
+${CMAKE_CURRENT_LIST_DIR}/src/uv-data-getter-setters.c
+${CMAKE_CURRENT_LIST_DIR}/src/version.c)
 
 if(WIN32)
   list(APPEND uv_defines WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0600)
@@ -117,33 +118,33 @@ if(WIN32)
        userenv
        ws2_32)
   list(APPEND uv_sources
-       src/win/async.c
-       src/win/core.c
-       src/win/detect-wakeup.c
-       src/win/dl.c
-       src/win/error.c
-       src/win/fs.c
-       src/win/fs-event.c
-       src/win/getaddrinfo.c
-       src/win/getnameinfo.c
-       src/win/handle.c
-       src/win/loop-watcher.c
-       src/win/pipe.c
-       src/win/thread.c
-       src/win/poll.c
-       src/win/process.c
-       src/win/process-stdio.c
-       src/win/signal.c
-       src/win/snprintf.c
-       src/win/stream.c
-       src/win/tcp.c
-       src/win/tty.c
-       src/win/udp.c
-       src/win/util.c
-       src/win/winapi.c
-       src/win/winsock.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/async.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/core.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/detect-wakeup.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/dl.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/error.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/fs.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/fs-event.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/getaddrinfo.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/getnameinfo.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/handle.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/loop-watcher.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/pipe.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/thread.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/poll.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/process.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/process-stdio.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/signal.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/snprintf.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/stream.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/tcp.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/tty.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/udp.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/util.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/winapi.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/win/winsock.c)
   list(APPEND uv_test_libraries ws2_32)
-  list(APPEND uv_test_sources src/win/snprintf.c test/runner-win.c)
+  list(APPEND uv_test_sources ${CMAKE_CURRENT_LIST_DIR}/src/win/snprintf.c test/runner-win.c)
 else()
   list(APPEND uv_defines _FILE_OFFSET_BITS=64 _LARGEFILE_SOURCE)
   if(NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
@@ -153,27 +154,26 @@ else()
     list(APPEND uv_libraries pthread)
   endif()
   list(APPEND uv_sources
-       src/unix/async.c
-       src/unix/core.c
-       src/unix/dl.c
-       src/unix/fs.c
-       src/unix/getaddrinfo.c
-       src/unix/getnameinfo.c
-       src/unix/loop-watcher.c
-       src/unix/loop.c
-       src/unix/pipe.c
-       src/unix/poll.c
-       src/unix/process.c
-       src/unix/random-devurandom.c
-       src/unix/signal.c
-       src/unix/stream.c
-       src/unix/tcp.c
-       src/unix/thread.c
-       src/unix/tty.c
-       src/unix/udp.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/async.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/core.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/dl.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/fs.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/getaddrinfo.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/getnameinfo.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/loop-watcher.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/loop.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/pipe.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/poll.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/process.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-devurandom.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/signal.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/stream.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/tcp.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/thread.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/tty.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/udp.c)
   list(APPEND uv_test_sources test/runner-unix.c)
 endif()
-
 if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
   list(APPEND uv_defines
        _ALL_SOURCE
@@ -183,76 +183,91 @@ if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
        HAVE_SYS_AHAFS_EVPRODS_H)
   list(APPEND uv_libraries perfstat)
   list(APPEND uv_sources
-       src/unix/aix.c
-       src/unix/aix-common.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/aix.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/aix-common.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Android")
   list(APPEND uv_defines _GNU_SOURCE)
   list(APPEND uv_libraries dl)
   list(APPEND uv_sources
-       src/unix/android-ifaddrs.c
-       src/unix/linux-core.c
-       src/unix/linux-inotify.c
-       src/unix/linux-syscalls.c
-       src/unix/procfs-exepath.c
-       src/unix/pthread-fixes.c
-       src/unix/random-getentropy.c
-       src/unix/random-getrandom.c
-       src/unix/random-sysctl-linux.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/android-ifaddrs.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-core.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-inotify.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-syscalls.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/procfs-exepath.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/pthread-fixes.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getentropy.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getrandom.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-sysctl-linux.c)
 endif()
 
 if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "Android|Linux|OS390")
-  list(APPEND uv_sources src/unix/proctitle.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/proctitle.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD")
-  list(APPEND uv_sources src/unix/freebsd.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/freebsd.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|NetBSD|OpenBSD")
-  list(APPEND uv_sources src/unix/posix-hrtime.c src/unix/bsd-proctitle.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-hrtime.c ${CMAKE_CURRENT_LIST_DIR}/src/unix/bsd-proctitle.c)
 endif()
 
 if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|NetBSD|OpenBSD")
-  list(APPEND uv_sources src/unix/bsd-ifaddrs.c src/unix/kqueue.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/bsd-ifaddrs.c ${CMAKE_CURRENT_LIST_DIR}/src/unix/kqueue.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  list(APPEND uv_sources src/unix/random-getrandom.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getrandom.c)
 endif()
 
 if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
-  list(APPEND uv_sources src/unix/random-getentropy.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getentropy.c)
 endif()
 
 if(APPLE)
   list(APPEND uv_defines _DARWIN_UNLIMITED_SELECT=1 _DARWIN_USE_64_BIT_INODE=1)
   list(APPEND uv_sources
-       src/unix/darwin-proctitle.c
-       src/unix/darwin.c
-       src/unix/fsevents.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/darwin-proctitle.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/darwin.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/fsevents.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   list(APPEND uv_defines _GNU_SOURCE _POSIX_C_SOURCE=200112)
   list(APPEND uv_libraries dl rt)
   list(APPEND uv_sources
-       src/unix/linux-core.c
-       src/unix/linux-inotify.c
-       src/unix/linux-syscalls.c
-       src/unix/procfs-exepath.c
-       src/unix/random-getrandom.c
-       src/unix/random-sysctl-linux.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-core.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-inotify.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-syscalls.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/procfs-exepath.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getrandom.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-sysctl-linux.c)
 endif()
 
+message(STATUS "CMAKE_SYSTEM_NAME : ${CMAKE_SYSTEM_NAME}")
+
+list(APPEND uv_defines _GNU_SOURCE _POSIX_C_SOURCE=200112 __nx__)
+list(APPEND uv_sources
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-core.c
+      #${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-inotify.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/linux-syscalls.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/procfs-exepath.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-getrandom.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/random-sysctl-linux.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-proctitle.c
+      ${CMAKE_CURRENT_LIST_DIR}/src/noimplfunc.c
+      )
+
+
 if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
-  list(APPEND uv_sources src/unix/netbsd.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/netbsd.c)
   list(APPEND uv_libraries kvm)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
-  list(APPEND uv_sources src/unix/openbsd.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/openbsd.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
@@ -271,9 +286,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
   list(APPEND uv_defines _UNIX03_WITHDRAWN)
   list(APPEND uv_defines _XOPEN_SOURCE_EXTENDED)
   list(APPEND uv_sources
-       src/unix/pthread-fixes.c
-       src/unix/os390.c
-       src/unix/os390-syscalls.c)
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/pthread-fixes.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/os390.c
+       ${CMAKE_CURRENT_LIST_DIR}/src/unix/os390-syscalls.c)
   list(APPEND uv_cflags -Wc,DLL -Wc,exportall -Wc,xplink)
   list(APPEND uv_libraries -Wl,xplink)
   list(APPEND uv_test_libraries -Wl,xplink)
@@ -286,38 +301,38 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OS400")
        _THREAD_SAFE
        _XOPEN_SOURCE=500)
   list(APPEND uv_sources
-    src/unix/aix-common.c
-    src/unix/ibmi.c
-    src/unix/no-fsevents.c
-    src/unix/posix-poll.c)
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/aix-common.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/ibmi.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-fsevents.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-poll.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
   list(APPEND uv_defines __EXTENSIONS__ _XOPEN_SOURCE=500)
   list(APPEND uv_libraries kstat nsl sendfile socket)
-  list(APPEND uv_sources src/unix/no-proctitle.c src/unix/sunos.c)
+  list(APPEND uv_sources ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-proctitle.c ${CMAKE_CURRENT_LIST_DIR}/src/unix/sunos.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
   list(APPEND uv_defines _BSD_SOURCE)
   list(APPEND uv_libraries bsd network)
   list(APPEND uv_sources
-	  src/unix/haiku.c
-	  src/unix/bsd-ifaddrs.c
-	  src/unix/no-fsevents.c
-	  src/unix/no-proctitle.c
-	  src/unix/posix-hrtime.c
-	  src/unix/posix-poll.c)
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/haiku.c
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/bsd-ifaddrs.c
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-fsevents.c
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-proctitle.c
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-hrtime.c
+	  ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-poll.c)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "QNX")
   list(APPEND uv_sources
-    src/unix/posix-hrtime.c
-    src/unix/posix-poll.c
-    src/unix/qnx.c
-    src/unix/bsd-ifaddrs.c
-    src/unix/no-proctitle.c
-    src/unix/no-fsevents.c)
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-hrtime.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/posix-poll.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/qnx.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/bsd-ifaddrs.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-proctitle.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/unix/no-fsevents.c)
   list(APPEND uv_cflags -fno-strict-aliasing)
   list(APPEND uv_libraries socket)
 endif()
@@ -326,32 +341,24 @@ if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|Linux|NetBSD|OpenBSD")
   list(APPEND uv_test_libraries util)
 endif()
 
-add_library(uv SHARED ${uv_sources})
-target_compile_definitions(uv
-  INTERFACE
-    USING_UV_SHARED=1
-  PRIVATE
-    BUILDING_UV_SHARED=1
-    ${uv_defines})
-target_compile_options(uv PRIVATE ${uv_cflags})
-target_include_directories(uv
-  PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-target_link_libraries(uv ${uv_libraries})
+if(NOT USE_MODULES)
+  list(APPEND CC_EXTERNAL_SOURCES_NX ${uv_sources})
+  list(APPEND CC_EXTERNAL_INCLUDES_NX ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/src)
+  list(APPEND CC_EXTERNAL_PRIVATE_DEFINITIONS_NX ${uv_defines})
+else()
+  add_library(uv_a STATIC ${uv_sources})
+  set(se_libs_name uv_a)
 
-add_library(uv_a STATIC ${uv_sources})
-target_compile_definitions(uv_a PRIVATE ${uv_defines})
-target_compile_options(uv_a PRIVATE ${uv_cflags})
-target_include_directories(uv_a
-  PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-target_link_libraries(uv_a ${uv_libraries})
+  target_compile_definitions(uv_a PRIVATE ${uv_defines})
+  target_compile_options(uv_a PRIVATE ${uv_cflags})
+  target_include_directories(uv_a
+    PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+  target_link_libraries(uv_a ${uv_libraries})
+endif()
 
 if(LIBUV_BUILD_TESTS)
   # Small hack: use ${uv_test_sources} now to get the runner skeleton,
